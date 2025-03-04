@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\TripAccepted;
+use App\Events\TripEnded;
+use App\Events\TripLocationUpdated;
+use App\Events\TripStarted;
 use App\Models\Trip;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -59,6 +63,9 @@ class TripsController extends Controller
             ]);
 
             $trip->load('driver.user');
+
+            TripAccepted::dispatch($trip, $request->user());
+
             return $trip;
 
         } catch (\Exception $e) {
@@ -73,7 +80,11 @@ class TripsController extends Controller
             $trip->update([
                 'is_started' => true,
             ]);
+
             $trip->load('driver.user');
+
+            TripStarted::dispatch($trip, $trip->user);
+
             return $trip;
         } catch (\Exception $e) {
             return response()->json(['message' => 'Kesalahan Validasi'], 401);
@@ -87,7 +98,11 @@ class TripsController extends Controller
             $trip->update([
                 'is_completed' => true,
             ]);
+
             $trip->load('driver.user');
+
+            TripEnded::dispatch($trip, $trip->user);
+
             return $trip;
         } catch (\Exception $e) {
             return response()->json(['message' => 'Kesalahan Validasi'], 401);
@@ -104,7 +119,11 @@ class TripsController extends Controller
             $trip->update([
                 'driver_location' => $request->driver_location,
             ]);
+
             $trip->load('driver.user');
+
+            TripLocationUpdated::dispatch($trip, $trip->user);
+
             return $trip;
         } catch (\Exception $e) {
             return response()->json(['message' => 'Kesalahan Validasi'], 401);
